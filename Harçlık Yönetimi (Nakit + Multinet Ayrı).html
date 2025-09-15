@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<!-- saved from url=(0049)https://sein456.github.io/harclik-app/Budget.html -->
+<html lang="tr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harçlık Yönetimi (Nakit + Multinet Ayrı)</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#121821;
+      --panel-2:#0f141c;
+      --text:#e6edf3;
+      --muted:#95a3b8;
+      --accent:#5ac8a8; /* yeşil */
+      --accent-2:#2fbf71; /* koyu yeşil */
+      --danger:#f05365;  /* kırmızı */
+      --warning:#ffb020; /* sarı */
+      --card-radius:16px;
+      --shadow:0 8px 24px rgba(0,0,0,.35);
+      --border:1px solid rgba(255,255,255,.06);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1400px 800px at 20% -10%, #122032 0%, transparent 60%),
+                  radial-gradient(1000px 600px at 120% -20%, #1a2331 0%, transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .container{max-width:1100px; margin:0 auto; padding:24px;}
+    header{display:flex; align-items:center; gap:12px; justify-content:space-between; margin-bottom:18px;}
+    .title{display:flex; align-items:center; gap:12px;}
+    .title h1{font-size:20px; margin:0; letter-spacing:.2px}
+    .badge{font-size:12px; color:var(--muted)}
+
+    .row{display:grid; gap:16px}
+    @media (min-width:900px){ .row.cols-3{grid-template-columns: 1.2fr 1fr 1fr} .row.cols-2{grid-template-columns: 1fr 1fr} }
+
+    .card{background:linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%); border:var(--border); border-radius:var(--card-radius); box-shadow:var(--shadow); padding:18px;}
+    .card h2{font-size:15px; margin:0 0 10px 0; color:#c9d4e3; font-weight:600}
+    .muted{color:var(--muted)}
+
+    .grid-stats{display:grid; grid-template-columns: repeat(5, 1fr); gap:12px}
+    @media (max-width:900px){ .grid-stats{grid-template-columns: 1fr 1fr} }
+
+    .stat{background:rgba(255,255,255,.02); border:var(--border); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:4px}
+    .stat .label{font-size:12px; color:#a7b4c6}
+    .stat .value{font-size:18px; font-weight:700}
+
+    .progress{height:12px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; border:var(--border)}
+    .progress .fill{height:100%; width:0%; background:var(--accent); transition:width .25s ease}
+    .progress.over .fill{background:var(--danger)}
+
+    .controls{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{background:#182233; color:var(--text); border:var(--border); padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600; transition:transform .06s ease, background .15s ease, border-color .2s ease;}
+    .btn:hover{transform:translateY(-1px); background:#1b2740}
+    .btn.primary{background:linear-gradient(180deg, #1e2c43, #1a2335); border-color:#2b3d59}
+    .btn.accent{background:linear-gradient(180deg, #1a3d34, #16372f); border-color:#245c4b}
+    .btn.danger{background:linear-gradient(180deg, #3b1e23, #2a1418); border-color:#5b2b34}
+    .btn:disabled{opacity:.5; cursor:not-allowed}
+
+    input[type="number"], input[type="date"], input[type="text"]{width:100%; background:#0f1520; border:var(--border); color:var(--text); padding:10px 12px; border-radius:12px; outline:none; font-size:14px}
+    .field{display:grid; gap:6px}
+    .fields{display:grid; gap:12px; grid-template-columns:1fr 1fr}
+    @media (max-width:720px){ .fields{grid-template-columns:1fr} }
+
+    .segmented{display:inline-flex; background:#0d1420; border:var(--border); border-radius:12px; overflow:hidden}
+    .segmented button{border:0; background:transparent; color:#b9c6d8; padding:10px 14px; cursor:pointer; font-weight:700}
+    .segmented button.active{background:#1b2a3d; color:#e8f2ff}
+
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    thead th{position:sticky; top:0; background:#0f1520; z-index:1}
+    th, td{padding:10px 8px; border-bottom:1px dashed rgba(255,255,255,.06); text-align:right}
+    th:first-child, td:first-child{text-align:left}
+    tr:hover{background:rgba(255,255,255,.02)}
+
+    .mono{font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    .warn{color:var(--warning)}
+
+    .toast{position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:#101826; border:var(--border); padding:10px 14px; border-radius:12px; box-shadow:var(--shadow); display:none}
+    .toast.show{display:block}
+
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:var(--border); background:#0e141e; color:#cfe7ff; font-size:12px}
+    .pill .dot{width:8px; height:8px; border-radius:999px; background:var(--accent)}
+    .pill.over .dot{background:var(--danger)}
+
+    .flex{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+    .spacer{flex:1}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title">
+        <div class="pill" id="monthPill"><span class="dot"></span> <span id="monthLabel">Eylül 2025</span></div>
+        <h1>Harçlık Yönetimi</h1>
+        <div class="badge">Nakit &amp; Multinet Ayrı · Koyu Tema</div>
+      </div>
+      <div class="controls">
+        <button class="btn danger" id="resetBtn">Sıfırla</button>
+      </div>
+    </header>
+
+    <!-- Bütçe Ayarları -->
+    <section class="card">
+      <h2>Bütçe Ayarları (Seçili Ay)</h2>
+      <div class="fields">
+        <div class="field">
+          <label>Nakit Bütçe (₺)</label>
+          <input type="number" min="0" step="0.01" id="budgetCash" placeholder="Örn: 3000">
+        </div>
+        <div class="field">
+          <label>Multinet Bütçe (₺)</label>
+          <input type="number" min="0" step="0.01" id="budgetCard" placeholder="Örn: 2500">
+        </div>
+      </div>
+      <div class="flex" style="margin-top:12px">
+        <button class="btn accent" id="saveBudgetBtn">Bütçeyi Kaydet</button>
+        <span class="muted" id="baseInfo">Bütçeleri girin</span>
+        <span class="spacer"></span>
+        <span class="muted">Veriler yerel cihazınızda (localStorage) saklanır.</span>
+      </div>
+    </section>
+
+    <!-- Tarih ve Hızlı Gezinme -->
+    <section class="row cols-3" style="margin-top:16px">
+      <div class="card">
+        <h2>Tarih Seç</h2>
+        <div class="fields" style="grid-template-columns:1fr">
+          <input type="date" id="dateInput">
+        </div>
+        <div class="controls" style="margin-top:10px">
+          <button class="btn" id="prevDayBtn">◀ Önceki Gün</button>
+          <button class="btn" id="todayBtn">Bugün</button>
+          <button class="btn" id="nextDayBtn">Sonraki Gün ▶</button>
+        </div>
+      </div>
+
+      <!-- Günlük Durum -->
+      <div class="card" style="grid-column: span 2">
+        <div class="flex" style="justify-content:space-between">
+          <h2>Günlük Durum</h2>
+          <div class="segmented" id="viewSeg">
+            <button data-view="toplam" class="active">Toplam</button>
+            <button data-view="nakit">Nakit</button>
+            <button data-view="multinet">Multinet</button>
+          </div>
+        </div>
+        <div class="grid-stats">
+          <div class="stat">
+            <div class="label">Günlük Limit (devretmeli)</div>
+            <div class="value mono" id="statEffLimit">₺0,00</div>
+          </div>
+          <div class="stat">
+            <div class="label">Devreden Bakiye (gün başı)</div>
+            <div class="value mono" id="statCarryIn">₺0,00</div>
+          </div>
+          <div class="stat">
+            <div class="label">Bugün Harcanan</div>
+            <div class="value mono" id="statSpent">₺0,00</div>
+          </div>
+          <div class="stat">
+            <div class="label">Bugün Kalan</div>
+            <div class="value mono" id="statLeft">₺0,00</div>
+          </div>
+          <div class="stat">
+            <div class="label">Bu Ay Toplam Kalan</div>
+            <div class="value mono" id="statMonthLeft">₺0,00</div>
+          </div>
+        </div>
+        <div class="flex" style="margin-top:12px">
+          <div class="progress" id="progressBar" style="flex:1">
+            <div class="fill" id="progressFill" style="width: 0%;"></div>
+          </div>
+          <div id="limitPill" class="pill"><span class="dot"></span><span id="limitText">Limit içinde</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Harcama Girişi -->
+    <section class="row cols-2" style="margin-top:16px">
+      <div class="card">
+        <h2>Harcama Girişi (Seçili Gün)</h2>
+        <div class="flex">
+          <div class="segmented" id="typeSeg">
+            <button data-type="Nakit" class="active">Nakit</button>
+            <button data-type="Multinet">Multinet</button>
+          </div>
+          <input type="text" id="amountInput" placeholder="Tutar (₺) – 75,50 gibi" style="max-width:220px">
+          <button class="btn primary" id="addBtn">Ekle</button>
+          <button class="btn" id="undoBtn">Geri Al</button>
+        </div>
+        <div class="muted" style="margin-top:8px">Son girilen harcamayı geri al, yalnızca o gün için.</div>
+        <div id="todayList" style="margin-top:12px"><div class="muted">Bu gün için kayıt yok.</div></div>
+      </div>
+
+      <!-- Aylık Özet -->
+      <div class="card">
+        <h2>Aylık Özet</h2>
+        <div class="fields" style="grid-template-columns:1fr 1fr">
+          <div class="field"><span class="label muted">Aylık Nakit Bütçe</span><div class="value mono" id="sumBudgetCash">₺0,00</div></div>
+          <div class="field"><span class="label muted">Aylık Multinet Bütçe</span><div class="value mono" id="sumBudgetCard">₺0,00</div></div>
+          <div class="field"><span class="label muted">Günlük Nakit Limit (temel)</span><div class="value mono" id="baseDailyCash">₺0,00</div></div>
+          <div class="field"><span class="label muted">Günlük Multinet Limit (temel)</span><div class="value mono" id="baseDailyCard">₺0,00</div></div>
+          <div class="field"><span class="label muted">Toplam Bütçe</span><div class="value mono" id="sumBudget">₺0,00</div></div>
+          <div class="field"><span class="label muted">Toplam Günlük Limit (temel)</span><div class="value mono" id="baseDaily">₺0,00</div></div>
+        </div>
+        <div class="muted" style="margin-top:8px">Not: Nakit ve Multinet **ayrı ayrı** devreder ve limite eklenir.</div>
+      </div>
+    </section>
+
+    <!-- Gün Gün Geçmiş -->
+    <section class="card" style="margin-top:16px">
+      <div class="flex" style="justify-content:space-between">
+        <h2>Gün Gün Geçmiş (Seçili Ay)</h2>
+        <div class="segmented" id="tableViewSeg">
+          <button data-view="toplam" class="active">Toplam</button>
+          <button data-view="nakit">Nakit</button>
+          <button data-view="multinet">Multinet</button>
+        </div>
+      </div>
+      <div style="max-height:360px; overflow:auto; border-radius:10px; border:var(--border)">
+        <table id="monthTable">
+          <thead>
+            <tr>
+              <th>Gün</th>
+              <th>Temel Limit</th>
+              <th>Devreden (Giriş)</th>
+              <th>Günlük Limit</th>
+              <th>Harcanan</th>
+              <th>Kalan</th>
+            </tr>
+          </thead>
+          <tbody><tr style="cursor: pointer;">
+          <td>01</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>02</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>03</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>04</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>05</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>06</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>07</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>08</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>09</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>10</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>11</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>12</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>13</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>14</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer; background: rgba(90, 200, 168, 0.1);">
+          <td>15</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>16</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>17</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>18</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>19</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>20</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>21</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>22</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>23</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>24</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>25</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>26</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>27</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>28</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>29</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr><tr style="cursor: pointer;">
+          <td>30</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td>
+          <td class="mono">₺0,00</td></tr></tbody>
+        </table>
+      </div>
+      <div class="muted" style="margin-top:8px">Bir satıra tıklayarak o güne geçebilirsiniz.</div>
+    </section>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+    // ==========================
+    // Utilities
+    // ==========================
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const fmtTL = (n) => new Intl.NumberFormat('tr-TR', { style:'currency', currency:'TRY', maximumFractionDigits:2 }).format((+n)||0);
+
+    function parseAmount(input){
+      if(typeof input !== 'string') input = String(input ?? '');
+      input = input.trim().replaceAll('₺','').replaceAll(' ','');
+      const parts = input.split(',');
+      if(parts.length > 1){
+        const last = parts.pop();
+        input = parts.join('').replaceAll('.','') + '.' + last;
+      } else {
+        input = input.replaceAll(',','.');
+      }
+      const v = parseFloat(input);
+      return isNaN(v) ? null : +(v.toFixed(2));
+    }
+
+    function daysInMonth(y, mIndex){ return new Date(y, mIndex+1, 0).getDate(); }
+    function ymd(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dd}`; }
+    function ym(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'); return `${y}-${m}`; }
+    function monthNameTR(index){ return ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][index]; }
+    function showToast(msg){ const el=$('#toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=> el.classList.remove('show'), 2000); }
+
+    // ==========================
+    // Storage
+    // ==========================
+    const STORE_KEY = 'harclik_v4_split';
+    function loadState(){
+      try{ const raw=localStorage.getItem(STORE_KEY); if(!raw) return { budgets:{}, tx:{} }; const obj=JSON.parse(raw); obj.budgets ||= {}; obj.tx ||= {}; return obj; }catch(e){ return { budgets:{}, tx:{} }; }
+    }
+    function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+    let state = loadState();
+
+    // ==========================
+    // Domain Logic (Ayrı Nakit / Multinet)
+    // ==========================
+    function getBudgetForYM(ymKey){ const b=state.budgets[ymKey] || { cash:0, card:0 }; return {cash:+b.cash||0, card:+b.card||0}; }
+    function setBudgetForYM(ymKey, cash, card){ state.budgets[ymKey] = { cash:+(cash||0), card:+(card||0) }; saveState(); }
+
+    function addTx(dateStr, type, amount){ state.tx[dateStr] ||= []; state.tx[dateStr].push({ type, amount:+amount, ts: Date.now() }); saveState(); }
+    function getTxForDay(dateStr){ return (state.tx[dateStr]||[]).slice().sort((a,b)=> a.ts-b.ts); }
+    function undoLastTx(dateStr){ const arr=state.tx[dateStr]; if(!arr||arr.length===0) return false; arr.pop(); if(arr.length===0) delete state.tx[dateStr]; saveState(); return true; }
+
+    function computeMonthArrays(date){
+      const y=date.getFullYear(); const mIdx=date.getMonth(); const key=ym(date); const days=daysInMonth(y,mIdx);
+      const b=getBudgetForYM(key); const baseCash = days? b.cash/days : 0; const baseCard = days? b.card/days : 0;
+      const baseTotal = baseCash + baseCard; const totalBudget = b.cash + b.card;
+
+      const arr = (v)=> new Array(days).fill(v);
+      const cash = { baseArr:arr(baseCash), carryInArr:arr(0), effArr:arr(0), spentArr:arr(0), leftArr:arr(0) };
+      const card = { baseArr:arr(baseCard), carryInArr:arr(0), effArr:arr(0), spentArr:arr(0), leftArr:arr(0) };
+
+      let carryCash=0, carryCard=0;
+      for(let d=1; d<=days; d++){
+        const ds = `${y}-${String(mIdx+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const tx = state.tx[ds]||[];
+        const spentCash = tx.filter(t=>t.type==='Nakit').reduce((s,t)=> s+(+t.amount||0),0);
+        const spentCard = tx.filter(t=>t.type==='Multinet').reduce((s,t)=> s+(+t.amount||0),0);
+        cash.spentArr[d-1]=spentCash; card.spentArr[d-1]=spentCard;
+        cash.carryInArr[d-1]=carryCash; card.carryInArr[d-1]=carryCard;
+        const effCash = baseCash + carryCash; const effCard = baseCard + carryCard;
+        cash.effArr[d-1]=effCash; card.effArr[d-1]=effCard;
+        const leftCash = effCash - spentCash; const leftCard = effCard - spentCard;
+        cash.leftArr[d-1]=leftCash; card.leftArr[d-1]=leftCard;
+        carryCash = leftCash; carryCard = leftCard; // ayrı ayrı devret
+      }
+
+      // Toplam görünüm için türev diziler
+      const total = { baseArr:[], carryInArr:[], effArr:[], spentArr:[], leftArr:[] };
+      for(let i=0;i<days;i++){
+        total.baseArr[i]   = cash.baseArr[i]   + card.baseArr[i];
+        total.carryInArr[i]= cash.carryInArr[i]+ card.carryInArr[i];
+        total.effArr[i]    = cash.effArr[i]    + card.effArr[i];
+        total.spentArr[i]  = cash.spentArr[i]  + card.spentArr[i];
+        total.leftArr[i]   = cash.leftArr[i]   + card.leftArr[i];
+      }
+
+      return { days, totalBudget, baseCash, baseCard, baseTotal, cash, card, total };
+    }
+
+    function sumMonthSpentBy(date, which){
+      const y=date.getFullYear(); const mIdx=date.getMonth(); const days=daysInMonth(y,mIdx);
+      let s=0; for(let d=1; d<=days; d++){ const ds=`${y}-${String(mIdx+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const tx=state.tx[ds]||[];
+        if(which==='Nakit') s += tx.filter(t=>t.type==='Nakit').reduce((a,t)=>a+(+t.amount||0),0);
+        else if(which==='Multinet') s += tx.filter(t=>t.type==='Multinet').reduce((a,t)=>a+(+t.amount||0),0);
+        else s += tx.reduce((a,t)=>a+(+t.amount||0),0);
+      } return s;
+    }
+
+    // ==========================
+    // UI State & Render
+    // ==========================
+    let selDate = new Date();
+    let viewMode = 'toplam'; // toplam | nakit | multinet
+
+    function setDateInput(d){ $('#dateInput').value = ymd(d); }
+    function gotoDate(d){ selDate=new Date(d.getFullYear(), d.getMonth(), d.getDate()); setDateInput(selDate); renderAll(); }
+    function updateHeaderMonth(){ const y=selDate.getFullYear(); const mIdx=selDate.getMonth(); $('#monthLabel').textContent=`${monthNameTR(mIdx)} ${y}`; }
+
+    function renderBudgets(){
+      const b=getBudgetForYM(ym(selDate));
+      $('#budgetCash').value = b.cash || '';
+      $('#budgetCard').value = b.card || '';
+      const arrays=computeMonthArrays(selDate);
+      $('#sumBudgetCash').textContent = fmtTL(b.cash);
+      $('#sumBudgetCard').textContent = fmtTL(b.card);
+      $('#sumBudget').textContent = fmtTL(arrays.totalBudget);
+      $('#baseDailyCash').textContent = fmtTL(arrays.baseCash);
+      $('#baseDailyCard').textContent = fmtTL(arrays.baseCard);
+      $('#baseDaily').textContent = fmtTL(arrays.baseTotal);
+      const info = arrays.totalBudget>0 ? `Bu ay ${arrays.days} gün · Nakit ${fmtTL(arrays.baseCash)} · Multinet ${fmtTL(arrays.baseCard)}` : 'Bütçeleri girin';
+      $('#baseInfo').textContent = info;
+    }
+
+    function pickSet(arrays){
+      if(viewMode==='nakit') return arrays.cash;
+      if(viewMode==='multinet') return arrays.card;
+      return arrays.total;
+    }
+
+    function renderDaily(){
+      const arrays = computeMonthArrays(selDate);
+      const idx = selDate.getDate()-1;
+      const set = pickSet(arrays);
+      const eff = set.effArr[idx]||0; const carryIn=set.carryInArr[idx]||0; const spent=set.spentArr[idx]||0; const left=set.leftArr[idx]||0;
+      $('#statEffLimit').textContent = fmtTL(eff);
+      $('#statCarryIn').textContent = fmtTL(carryIn);
+      $('#statSpent').textContent = fmtTL(spent);
+      $('#statLeft').textContent = fmtTL(left);
+
+      // month left by view
+      let monthLeft;
+      if(viewMode==='nakit') monthLeft = (getBudgetForYM(ym(selDate)).cash) - sumMonthSpentBy(selDate,'Nakit');
+      else if(viewMode==='multinet') monthLeft = (getBudgetForYM(ym(selDate)).card) - sumMonthSpentBy(selDate,'Multinet');
+      else monthLeft = arrays.totalBudget - sumMonthSpentBy(selDate,'Toplam');
+      $('#statMonthLeft').textContent = fmtTL(monthLeft);
+
+      // progress
+      const bar=$('#progressBar'), fill=$('#progressFill');
+      let pct = 0; if(eff>0){ pct = Math.min(100, Math.round((spent/eff)*100)); } else if(spent>0){ pct=100; }
+      fill.style.width = pct + '%';
+      const over = spent > eff; bar.classList.toggle('over', over); $('#limitPill').classList.toggle('over', over); $('#limitText').textContent = over ? 'Limit aşıldı' : 'Limit içinde';
+
+      // Today list
+      const dayTx = getTxForDay(ymd(selDate));
+      const wrap=$('#todayList');
+      if(dayTx.length===0){ wrap.innerHTML='<div class="muted">Bu gün için kayıt yok.</div>'; }
+      else{
+        wrap.innerHTML = `<table><thead><tr><th style="text-align:left">#</th><th>Tür</th><th>Tutar</th></tr></thead><tbody>
+          ${dayTx.map((t,i)=>`<tr><td style="text-align:left">${i+1}</td><td>${t.type}</td><td class=\"mono\">${fmtTL(t.amount)}</td></tr>`).join('')}
+        </tbody></table>`;
+      }
+    }
+
+    function renderMonthTable(){
+      const arrays=computeMonthArrays(selDate); const set=pickSet(arrays);
+      const y=selDate.getFullYear(); const mIdx=selDate.getMonth(); const tbody=$('#monthTable tbody');
+      tbody.innerHTML='';
+      for(let d=1; d<=arrays.days; d++){
+        const idx=d-1; const tr=document.createElement('tr'); const ds=`${y}-${String(mIdx+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isSel=d===selDate.getDate(); tr.style.cursor='pointer'; if(isSel) tr.style.background='rgba(90,200,168,.10)';
+        tr.innerHTML=`
+          <td>${String(d).padStart(2,'0')}</td>
+          <td class="mono">${fmtTL(set.baseArr[idx]||0)}</td>
+          <td class="mono">${fmtTL(set.carryInArr[idx]||0)}</td>
+          <td class="mono">${fmtTL(set.effArr[idx]||0)}</td>
+          <td class="mono">${fmtTL(set.spentArr[idx]||0)}</td>
+          <td class="mono">${fmtTL(set.leftArr[idx]||0)}</td>`;
+        tr.addEventListener('click', ()=> gotoDate(new Date(y, mIdx, d)));
+        tbody.appendChild(tr);
+      }
+    }
+
+    function renderAll(){
+      updateHeaderMonth();
+      renderBudgets();
+      renderDaily();
+      renderMonthTable();
+      const arrays=computeMonthArrays(selDate); const monthLeft = arrays.totalBudget - sumMonthSpentBy(selDate,'Toplam');
+      $('#monthPill').classList.toggle('over', monthLeft<0);
+    }
+
+    // ==========================
+    // Events
+    // ==========================
+    function initEvents(){
+      $('#saveBudgetBtn').addEventListener('click', ()=>{
+        const cash=parseAmount($('#budgetCash').value||'0'); const card=parseAmount($('#budgetCard').value||'0');
+        if(cash===null||card===null||cash<0||card<0){ showToast('Lütfen geçerli tutarlar girin.'); return; }
+        setBudgetForYM(ym(selDate), cash, card); renderAll(); showToast('Bütçe kaydedildi.');
+      });
+
+      $('#dateInput').addEventListener('change', (e)=>{ const v=e.target.value; if(!v) return; const [y,m,d]=v.split('-').map(Number); gotoDate(new Date(y,m-1,d)); });
+      $('#todayBtn').addEventListener('click', ()=> gotoDate(new Date()));
+      $('#prevDayBtn').addEventListener('click', ()=>{ const d=new Date(selDate); d.setDate(d.getDate()-1); gotoDate(d); });
+      $('#nextDayBtn').addEventListener('click', ()=>{ const d=new Date(selDate); d.setDate(d.getDate()+1); gotoDate(d); });
+
+      // Görünüm segmentleri
+      $$('#viewSeg button').forEach(btn=> btn.addEventListener('click', ()=>{ $$('#viewSeg button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); viewMode=btn.getAttribute('data-view'); renderDaily(); renderMonthTable(); }));
+      $$('#tableViewSeg button').forEach(btn=> btn.addEventListener('click', ()=>{ $$('#tableViewSeg button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); viewMode=btn.getAttribute('data-view'); renderDaily(); renderMonthTable(); }));
+
+      // Tür seçimi
+      $$('#typeSeg button').forEach(btn=> btn.addEventListener('click', ()=>{ $$('#typeSeg button').forEach(b=> b.classList.remove('active')); btn.classList.add('active'); }));
+
+      // Ekle
+      $('#addBtn').addEventListener('click', ()=>{
+        const active=$('#typeSeg button.active'); const type=active? active.getAttribute('data-type') : 'Nakit';
+        const amount=parseAmount($('#amountInput').value);
+        if(amount===null||amount<=0){ showToast('Geçerli bir tutar girin.'); return; }
+        addTx(ymd(selDate), type, amount); $('#amountInput').value=''; renderAll(); showToast(`${type} harcaması eklendi.`);
+      });
+
+      // Geri al
+      $('#undoBtn').addEventListener('click', ()=>{ const ok=undoLastTx(ymd(selDate)); if(!ok){ showToast('Bu güne ait kayıt bulunamadı.'); return; } renderAll(); showToast('Son harcama geri alındı.'); });
+
+      // Sıfırla
+      $('#resetBtn').addEventListener('click', ()=>{ if(confirm('Tüm veriler silinsin mi? Bu işlem geri alınamaz.')){ state={budgets:{}, tx:{}}; saveState(); renderAll(); showToast('Tüm veriler temizlendi.'); } });
+    }
+
+    // ==========================
+    // Init
+    // ==========================
+    (function(){ setDateInput(new Date()); initEvents(); renderAll(); })();
+  </script>
+
+
+</body></html>
